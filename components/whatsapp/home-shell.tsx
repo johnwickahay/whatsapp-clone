@@ -16,6 +16,7 @@ import type { ChatPreview } from "./types";
 import { Clock, Clock1, Clock10, Download, Lock } from "lucide-react";
 import { MessageHome } from "../icons/message-home";
 import { WallpaperModal, type WallpaperOption } from "./wallpaper-modal";
+import { formatMessagePreview } from "@/lib/message-utils";
 
 type ChatSummaryRow = {
   conversation_id: string;
@@ -88,36 +89,6 @@ function setLocalLastReadAt(userId: string, conversationId: string, iso: string)
   }
 }
 
-function getContactCountFromBody(body: string): number {
-  try {
-    const parsed = JSON.parse(body) as { contacts?: unknown };
-    if (!parsed || typeof parsed !== "object") return 0;
-    const contacts = (parsed as { contacts?: unknown }).contacts;
-    if (!Array.isArray(contacts)) return 0;
-    return contacts.length;
-  } catch {
-    return 0;
-  }
-}
-
-function looksLikePollBody(body: string): boolean {
-  try {
-    const parsed = JSON.parse(body) as {
-      question?: unknown;
-      options?: unknown;
-      allowMultiple?: unknown;
-    };
-    if (!parsed || typeof parsed !== "object") return false;
-    const question = typeof parsed.question === "string" ? parsed.question.trim() : "";
-    const options = Array.isArray(parsed.options) ? parsed.options : [];
-    if (!question) return false;
-    if (options.length < 2) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function formatLastMessage(input: {
   body: string | null | undefined;
   messageType?: string | null | undefined;
@@ -125,62 +96,7 @@ function formatLastMessage(input: {
   senderId?: string | null | undefined;
   currentUserId?: string | null | undefined;
 }): string {
-  const body = (input.body ?? "").trim();
-  const messageType = (input.messageType ?? "").trim().toLowerCase();
-
-  if (messageType === "poll") {
-    try {
-      const parsed = JSON.parse(body);
-      return parsed.question ? `Encuesta: ${parsed.question}` : "Encuesta";
-    } catch {
-      return "Encuesta";
-    }
-  }
-
-  if (messageType === "contact") {
-    const count = getContactCountFromBody(body);
-    if (count >= 2) return `${count} contactos`;
-    return "Contacto";
-  }
-
-  if (messageType === "document") {
-    const name = (input.mediaName ?? "").trim();
-    return name ? `Documento: ${name}` : "Documento";
-  }
-
-  if (messageType === "image") return "Foto";
-  if (messageType === "video") return "Video";
-  if (messageType === "audio") return "Audio";
-
-  if (messageType === "status_reply") {
-    try {
-      const parsed = JSON.parse(body);
-      const text = parsed.replyText || "";
-      const isMe = input.senderId && input.currentUserId && input.senderId === input.currentUserId;
-      const prefix = isMe ? "Respondiste a un estado" : "Respondió a un estado";
-      return text ? `${prefix}: ${text}` : prefix;
-    } catch {
-      return "Respondió a un estado";
-    }
-  }
-
-  // Fallbacks for initial load (RPC only returns body)
-  if (looksLikePollBody(body)) {
-    try {
-      const parsed = JSON.parse(body);
-      return parsed.question ? `Encuesta: ${parsed.question}` : "Encuesta";
-    } catch {
-      return "Encuesta";
-    }
-  }
-
-  const contactCount = getContactCountFromBody(body);
-  if (contactCount > 0) {
-    if (contactCount >= 2) return `${contactCount} contactos`;
-    return "Contacto";
-  }
-
-  return body;
+  return formatMessagePreview(input);
 }
 
 export function WhatsAppHomeShell() {

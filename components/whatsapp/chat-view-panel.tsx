@@ -17,6 +17,8 @@ import { DisappearingMessagesModal } from "./disappearing-messages-modal";
 import { createClient } from "@/lib/supabase/client";
 import type { ChatPreview } from "./types";
 import type { WallpaperOption } from "./wallpaper-modal";
+import type { ChatMessage } from "@/hooks/use-realtime-chat";
+import type { StatusSummary } from "./status-panel";
 
 type Props = {
     chat: ChatPreview;
@@ -28,9 +30,9 @@ type Props = {
     onToggleFavorite?: (chatId: string, next: boolean) => void;
     onDeleteChat?: (chatId: string, opts: { isGroup: boolean; isCreator: boolean }) => void;
     onLeaveGroup?: (chatId: string) => void;
-    allSummaries?: any[];
-    onOpenStatus?: (summary: any) => void;
-    statusSummary?: any;
+    allSummaries?: StatusSummary[];
+    onOpenStatus?: (summary: StatusSummary) => void;
+    statusSummary?: StatusSummary;
     wallpaper?: WallpaperOption;
     className?: string;
 };
@@ -71,7 +73,7 @@ export function ChatViewPanel({
         conversationCreatedBy,
     } = useChatData(chat, userId, onlineUserIds);
 
-    const [messages, setMessages] = useState<any[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
 
     const {
         isSearchOpen,
