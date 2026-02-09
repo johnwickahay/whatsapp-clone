@@ -1,0 +1,12 @@
+
+> dev
+> next dev
+
+▲ Next.js 16.1.0 (Turbopack, Cache Components)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+✓ Ready in 4s
+○ Compiling /auth/login ...
+ GET /auth/login 200 in 9.6s (compile: 8.3s, proxy.ts: 471ms, render: 801ms)
