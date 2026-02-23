@@ -29,18 +29,31 @@ This document outlines the current features, suggested improvements, and potenti
 - **Wallpapers**: Customizable chat backgrounds.
 - **Profile Management**: Update name, avatar, and "about" info.
 
-## 🛠️ Suggested Improvements
+## ✅ Completed Improvements
+
+### Architectural Refactor
+- **Component Decomposition**: Successfully broke down massive components into smaller, reusable ones:
+    - `home-shell.tsx` logic moved to `useHomeData` hook.
+    - `ChatListPanel.tsx` group creation flow moved to `GroupCreatePanel.tsx`.
+    - `RealtimeChat.tsx` split into `MessageList.tsx` and `ChatInput.tsx`.
+- **Logic Centralization**: Unified message formatting and preview logic in `lib/message-utils.ts`.
+- **Hook Extraction**: Extracted `useTypingIndicators` to handle sidebar presence more cleanly.
+
+### Code Quality & UX
+- **Type Safety**: Unified `ChatMessage` and `StatusRecord` interfaces in `components/whatsapp/types.ts`. Eliminated most `any` types in core panels.
+- **Error Visibility**: Implemented a centralized `toast` notification system in `lib/toast-utils.ts` and integrated it into the root shell.
+- **Build Resilience**: Updated Supabase clients to handle missing environment variables gracefully, allowing the project to build even in environments where secrets are not yet configured.
+
+## 🛠️ Pending Improvements
 
 ### Performance & Scalability
-- **Refactor Large Components**: Components like `home-shell.tsx` and `ChatListPanel.tsx` exceed 800 lines and should be broken down into smaller, focused components.
-- **Optimize Typing Subscriptions**: Currently, `ChatListPanel` creates a separate channel for every chat in the list. This could be optimized to only subscribe to visible chats or use a more aggregated approach.
-- **Lazy Loading**: Implement virtualization for the chat list and message list to handle large volumes of data.
-- **Centralize Shared Logic**: Message formatting and date utilities are duplicated across hooks and components.
+- **Lazy Loading**: Implement virtualization (e.g., `react-window` or `virtuoso`) for the chat list and message list to handle large volumes of data efficiently.
+- **Aggregated Subscriptions**: Further optimize sidebar typing indicators to use a single aggregated presence channel if the number of chats grows significantly.
+- **Image Optimization**: Replace standard `<img>` tags with Next.js `Image` component for automatic optimization.
 
-### Code Quality
-- **Enhance Type Safety**: Several areas use `any` (especially in realtime payloads). These should be replaced with strict interfaces.
-- **Error Boundary**: Implement global error boundaries and toast notifications for a better failure experience.
-- **Global State**: Consider using a lightweight state management library (like Jotai or Zustand) for global UI state instead of passing many props down from `home-shell.tsx`.
+### Advanced Features
+- **Global State**: Transition from heavy prop-drilling to a lightweight state management library (like Jotai or Zustand) for global UI state.
+- **Error Boundaries**: Add React Error Boundaries around major panels to prevent total app crashes.
 
 ## 🐞 Potential Bugs
 

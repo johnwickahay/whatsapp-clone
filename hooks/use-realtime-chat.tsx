@@ -3,49 +3,12 @@
 import { createClient } from '@/lib/supabase/client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { formatMessagePreview as formatMessagePreviewUtil } from '@/lib/message-utils'
+import { type ChatMessage, type ReplyToData, type MessageReaction } from '@/components/whatsapp/types'
 
 interface UseRealtimeChatProps {
   conversationId: string
   userId: string
   username: string
-}
-
-export interface ChatMessage {
-  id: string
-  content: string
-  messageType?: string | null
-  mediaUrl?: string | null
-  mediaName?: string | null
-  mediaMime?: string | null
-  mediaSize?: number | null
-  user: {
-    id: string
-    name: string
-    avatarUrl?: string | null
-  }
-  createdAt: string
-  reactions: MessageReaction[]
-  replyTo?: {
-    id: string
-    content: string
-    senderName: string
-  } | null
-  isForwarded?: boolean
-}
-
-export interface ReplyToData {
-  id: string
-  content: string
-  senderName: string
-  messageType: string | null
-}
-
-export interface MessageReaction {
-  id: string
-  messageId: string
-  userId: string
-  emoji: string
-  createdAt: string
 }
 
 type ContactPayload = {
@@ -489,7 +452,7 @@ export function useRealtimeChat({ conversationId, userId, username }: UseRealtim
             if (row.reply_to_data) {
               replyToObj = {
                 id: row.reply_to_data.id,
-                content: formatMessagePreview(row.reply_to_data.content, row.reply_to_data.messageType),
+                content: formatMessagePreview(row.reply_to_data.content, row.reply_to_data.messageType ?? null),
                 senderName: row.reply_to_data.senderName,
               }
             } else if (row.reply_to_message_id) {

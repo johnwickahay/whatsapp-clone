@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { MessageReaction } from "@/hooks/use-realtime-chat"
+import type { MessageReaction } from "./types"
 
 interface MessageReactionsProps {
     reactions: MessageReaction[]

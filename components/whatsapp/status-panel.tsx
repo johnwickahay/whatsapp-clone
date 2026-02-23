@@ -1,15 +1,16 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Camera, ChevronLeft, ChevronRight, ChevronUp, Eye, Image as ImageIcon, Loader2, MoreVertical, Music, Pause, Play, PencilLine, Plus, Send, Smile, Trash2, Volume2, VolumeX, X, PlusCircle, Lock } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, Eye, Image as ImageIcon, Loader2, Music, Pause, Play, PencilLine, Plus, Send, Smile, Trash2, Volume2, VolumeX, X, Lock } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
-import { useStatuses, type StatusRecord } from "./hooks/use-statuses";
+import { useStatuses } from "./hooks/use-statuses";
 import { State } from "../icons/state";
+import { type StatusSummary, type StatusRecord } from "./types";
 
 type Props = {
   className?: string;
@@ -17,16 +18,6 @@ type Props = {
   profileInitials: string;
   profileAvatarUrl: string | null;
   profileName: string;
-};
-
-export type StatusSummary = {
-  userId: string;
-  name: string;
-  avatarUrl: string | null;
-  initials: string;
-  latestTime: string;
-  statuses: StatusRecord[];
-  hasNew: boolean;
 };
 
 type ComposerMode = "text" | "media";
@@ -86,7 +77,7 @@ export function StatusPanel({
     }
     summaries.sort((a, b) => new Date(b.latestTime).getTime() - new Date(a.latestTime).getTime());
     return summaries;
-  }, [groups.recent, statusMap]);
+  }, [groups.recent, statusMap, userId, profileName, profileAvatarUrl, profileInitials]);
 
   useEffect(() => {
     if (!activeSummary) return;
@@ -420,17 +411,6 @@ export function StatusPanel({
   );
 }
 
-function HeaderIcon({ children, ariaLabel }: { children: React.ReactNode; ariaLabel?: string }) {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-[#F7F5F3] dark:hover:bg-whatsapp-panel hover:text-foreground"
-    >
-      {children}
-    </button>
-  );
-}
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -549,7 +529,6 @@ export function StatusViewer({
   const [isMuted, setIsMuted] = useState(true);
   const [showViewers, setShowViewers] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isOwnStatus = isOwn || (!!summary && summary.userId === currentUserId);
 
   const isPaused = isManuallyPaused || isHolding;
 
@@ -557,11 +536,10 @@ export function StatusViewer({
   const STATUS_DURATION = 5000;
   const QUICK_REACTIONS = ["😂", "😮", "😍", "😢", "🙏", "👏", "🎉", "💯"];
 
-  if (!summary) return null;
-
-  const currentStatus = summary.statuses[currentIndex];
+  const currentStatus = summary?.statuses[currentIndex];
+  const isOwnStatus = isOwn || (!!summary && summary.userId === currentUserId);
   const canGoPrevious = currentIndex > 0;
-  const canGoNext = currentIndex < summary.statuses.length - 1;
+  const canGoNext = summary ? currentIndex < summary.statuses.length - 1 : false;
 
   // Handle video pause/play
   useEffect(() => {
@@ -584,8 +562,9 @@ export function StatusViewer({
 
   // Auto-advance timer only for non-media statuses
   useEffect(() => {
+    if (!summary) return;
     const isMedia = currentStatus?.media_url && (isVideo(currentStatus.media_url) || isAudio(currentStatus.media_url));
-    if (!summary || isPaused || isMedia) return;
+    if (isPaused || isMedia) return;
 
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -599,8 +578,9 @@ export function StatusViewer({
 
   // Handle progress completion
   useEffect(() => {
+    if (!summary) return;
     if (progress >= 100) {
-      if (summary && currentIndex < summary.statuses.length - 1) {
+      if (currentIndex < summary.statuses.length - 1) {
         setCurrentIndex((prev) => prev + 1);
         setProgress(0);
       } else {
@@ -608,6 +588,8 @@ export function StatusViewer({
       }
     }
   }, [progress, currentIndex, summary, onClose]);
+
+  if (!summary) return null;
 
   const handlePrevious = () => {
     if (canGoPrevious) {
@@ -624,12 +606,12 @@ export function StatusViewer({
   };
 
   const handleSendReply = async () => {
-    if (!replyText.trim() || isOwnStatus) return;
+    if (!replyText.trim() || isOwnStatus || !summary) return;
 
     let finalUserId = currentUserId;
     if (!finalUserId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      finalUserId = user?.id || "";
+      const { data: userData } = await supabase.auth.getUser();
+      finalUserId = userData.user?.id || "";
     }
 
     if (!finalUserId) {

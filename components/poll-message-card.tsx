@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type FC } from 'react'
 
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '@/hooks/use-realtime-chat'
+import type { ChatMessage } from '@/components/whatsapp/types'
 
 export type PollPayload = {
   question: string

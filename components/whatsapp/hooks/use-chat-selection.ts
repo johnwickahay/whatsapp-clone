@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ChatPreview } from "../types";
-import type { ChatMessage } from "@/hooks/use-realtime-chat";
+import type { ChatPreview, ChatMessage } from "../types";
 import { createClient } from "@/lib/supabase/client";
 
 export function useChatSelection(chat: ChatPreview, userId: string, username: string, messages: ChatMessage[]) {

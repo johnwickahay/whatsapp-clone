@@ -15,10 +15,8 @@ import { ClearChatDialog } from "./clear-chat-dialog";
 import { DeleteMessageDialog } from "./delete-message-dialog";
 import { DisappearingMessagesModal } from "./disappearing-messages-modal";
 import { createClient } from "@/lib/supabase/client";
-import type { ChatPreview } from "./types";
+import type { ChatPreview, ChatMessage, StatusSummary } from "./types";
 import type { WallpaperOption } from "./wallpaper-modal";
-import type { ChatMessage } from "@/hooks/use-realtime-chat";
-import type { StatusSummary } from "./status-panel";
 
 type Props = {
     chat: ChatPreview;

@@ -141,6 +141,15 @@ type Props = {
   onOpenChatSearch?: () => void;
 };
 
+type MediaItem = {
+  id: string;
+  media_url: string;
+  media_mime: string | null;
+  media_name: string | null;
+  media_size: number | null;
+  created_at: string;
+};
+
 export function ContactInfoPanel({
   open,
   title = "Info. del contacto",
@@ -184,16 +193,7 @@ export function ContactInfoPanel({
     setAddMemberOpen(true);
   }, [addMemberTrigger, addMemberTriggerSeen, isGroup]);
 
-  const [mediaItems, setMediaItems] = useState<
-    Array<{
-      id: string;
-      media_url: string;
-      media_mime: string | null;
-      media_name: string | null;
-      media_size: number | null;
-      created_at: string;
-    }>
-  >([]);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
 
@@ -257,15 +257,15 @@ export function ContactInfoPanel({
       }
 
       const next = (mediaRows ?? [])
-        .map((r: any) => ({
-          id: r.id as string,
-          media_url: r.media_url as string,
-          media_mime: (r.media_mime as string | null) ?? null,
-          media_name: (r.media_name as string | null) ?? null,
-          media_size: (r.media_size as number | null) ?? null,
-          created_at: r.created_at as string,
+        .map((r: any): MediaItem => ({
+          id: r.id,
+          media_url: r.media_url,
+          media_mime: r.media_mime ?? null,
+          media_name: r.media_name ?? null,
+          media_size: r.media_size ?? null,
+          created_at: r.created_at,
         }))
-        .filter((r: any) => Boolean(r.media_url));
+        .filter((r: MediaItem) => Boolean(r.media_url));
       setMediaItems(next);
     }
 
@@ -357,14 +357,14 @@ export function ContactInfoPanel({
         .limit(200);
       if (!active) return;
       const next = (data ?? [])
-        .map((r: any) => ({
-          id: r.id as string,
-          full_name: (r.full_name as string | null) ?? null,
-          email: (r.email as string | null) ?? null,
-          avatar_url: (r.avatar_url as string | null) ?? null,
-          about: (r.about as string | null) ?? null,
+        .map((r: any): ContactRow => ({
+          id: r.id,
+          full_name: r.full_name ?? null,
+          email: r.email ?? null,
+          avatar_url: r.avatar_url ?? null,
+          about: r.about ?? null,
         }))
-        .filter((r: any) => r.id !== userId && !existing.has(r.id));
+        .filter((r: ContactRow) => r.id !== userId && !existing.has(r.id));
 
       setAddMemberContacts(next);
     }
