@@ -1,29 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
-
-export type StatusRecord = {
-  id: string;
-  user_id: string;
-  media_url: string | null;
-  caption: string | null;
-  created_at: string;
-  expires_at: string;
-  author: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-  } | null;
-  status_views: Array<{
-    status_id: string | null;
-    viewer_id: string | null;
-    viewed_at: string;
-    viewer: {
-      full_name: string | null;
-      avatar_url: string | null;
-    } | null;
-  }> | null;
-};
+import { type StatusRecord } from "../types";
 
 type StatusGroups = {
   own: StatusRecord[];

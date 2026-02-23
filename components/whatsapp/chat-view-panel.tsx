@@ -15,7 +15,7 @@ import { ClearChatDialog } from "./clear-chat-dialog";
 import { DeleteMessageDialog } from "./delete-message-dialog";
 import { DisappearingMessagesModal } from "./disappearing-messages-modal";
 import { createClient } from "@/lib/supabase/client";
-import type { ChatPreview } from "./types";
+import type { ChatPreview, ChatMessage, StatusSummary } from "./types";
 import type { WallpaperOption } from "./wallpaper-modal";
 
 type Props = {
@@ -28,9 +28,9 @@ type Props = {
     onToggleFavorite?: (chatId: string, next: boolean) => void;
     onDeleteChat?: (chatId: string, opts: { isGroup: boolean; isCreator: boolean }) => void;
     onLeaveGroup?: (chatId: string) => void;
-    allSummaries?: any[];
-    onOpenStatus?: (summary: any) => void;
-    statusSummary?: any;
+    allSummaries?: StatusSummary[];
+    onOpenStatus?: (summary: StatusSummary) => void;
+    statusSummary?: StatusSummary;
     wallpaper?: WallpaperOption;
     className?: string;
 };
@@ -71,7 +71,7 @@ export function ChatViewPanel({
         conversationCreatedBy,
     } = useChatData(chat, userId, onlineUserIds);
 
-    const [messages, setMessages] = useState<any[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
 
     const {
         isSearchOpen,

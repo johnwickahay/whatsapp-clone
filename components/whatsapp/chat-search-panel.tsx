@@ -3,7 +3,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { type ChatMessage, formatMessagePreview } from "@/hooks/use-realtime-chat";
+import { formatMessagePreview } from "@/hooks/use-realtime-chat";
+import { type ChatMessage } from "@/components/whatsapp/types";
 
 function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

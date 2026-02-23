@@ -1,4 +1,4 @@
-import type { ChatMessage, ChatPreview } from "./types";
+import type { MockChatMessage as ChatMessage, ChatPreview } from "./types";
 
 export const mockChats: ChatPreview[] = [
   {

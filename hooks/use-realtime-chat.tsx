@@ -2,42 +2,13 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { formatMessagePreview as formatMessagePreviewUtil } from '@/lib/message-utils'
+import { type ChatMessage, type ReplyToData, type MessageReaction } from '@/components/whatsapp/types'
 
 interface UseRealtimeChatProps {
   conversationId: string
   userId: string
   username: string
-}
-
-export interface ChatMessage {
-  id: string
-  content: string
-  messageType?: string | null
-  mediaUrl?: string | null
-  mediaName?: string | null
-  mediaMime?: string | null
-  mediaSize?: number | null
-  user: {
-    id: string
-    name: string
-    avatarUrl?: string | null
-  }
-  createdAt: string
-  reactions: MessageReaction[]
-  replyTo?: {
-    id: string
-    content: string
-    senderName: string
-  } | null
-  isForwarded?: boolean
-}
-
-export interface MessageReaction {
-  id: string
-  messageId: string
-  userId: string
-  emoji: string
-  createdAt: string
 }
 
 type ContactPayload = {
@@ -107,45 +78,8 @@ export interface UseRealtimeChatReturn {
   isConnected: boolean
 }
 
-function tryParseLegacyPoll(content: string | null | undefined): string | null {
-  if (!content) return null
-  try {
-    const parsed = JSON.parse(content)
-    if (!parsed || typeof parsed !== 'object') return null
-    const question = typeof parsed.question === 'string' ? parsed.question.trim() : ''
-    const options = Array.isArray(parsed.options) ? parsed.options : []
-    if (!question) return null
-    const optionsText = options.length > 0 ? ` (${options.join(', ')})` : ''
-    return `📊 Encuesta: ${question}${optionsText}`
-  } catch {
-    return null
-  }
-}
-
 export function formatMessagePreview(content: string, type: string | null): string {
-  const pollSummary = tryParseLegacyPoll(content)
-  if (pollSummary) return pollSummary
-
-  const t = (type || '').toLowerCase()
-  const hasContent = (content || '').trim().length > 0
-
-  if (t === 'image') return hasContent ? `📷 Foto: ${content}` : '📷 Foto'
-  if (t === 'video') return hasContent ? `🎥 Video: ${content}` : '🎥 Video'
-  if (t === 'audio') return '🎤 Audio'
-  if (t === 'document') return hasContent ? `📄 Documento: ${content}` : '📄 Documento'
-  if (t === 'contact') return '👤 Contacto'
-  if (t === 'poll') return '📊 Encuesta'
-
-  if (t === 'status_reply') {
-    try {
-      const statusData = JSON.parse(content)
-      return `✨ Estado: ${statusData.replyText || 'Respuesta a estado'}`
-    } catch (e) {
-      return '✨ Respuesta a estado'
-    }
-  }
-
-  return content || 'Mensaje'
+  return formatMessagePreviewUtil({ body: content, messageType: type });
 }
 
 export function useRealtimeChat({ conversationId, userId, username }: UseRealtimeChatProps): UseRealtimeChatReturn {
@@ -317,7 +251,7 @@ export function useRealtimeChat({ conversationId, userId, username }: UseRealtim
         }
         const ts = typeof p.typing_at === 'number' ? p.typing_at : 0
         const age = now - ts
-        if (ts && now - ts > 4500) {
+        if (ts && age > 4500) {
           continue
         }
 
@@ -482,23 +416,10 @@ export function useRealtimeChat({ conversationId, userId, username }: UseRealtim
             media_size?: number | null
             is_forwarded?: boolean
             reply_to_message_id?: string | null
-            reply_to_data?: any
+            reply_to_data?: ReplyToData | null
           }
         }) => {
-          const row = payload.new as {
-            id: string
-            body: string | null
-            sender_id: string
-            created_at: string
-            message_type?: string | null
-            media_url?: string | null
-            media_name?: string | null
-            media_mime?: string | null
-            media_size?: number | null
-            is_forwarded?: boolean
-            reply_to_message_id?: string | null
-            reply_to_data?: any
-          }
+          const row = payload.new;
 
           const currentNames = userNamesRef.current
           const currentAvatars = userAvatarsRef.current
@@ -531,7 +452,7 @@ export function useRealtimeChat({ conversationId, userId, username }: UseRealtim
             if (row.reply_to_data) {
               replyToObj = {
                 id: row.reply_to_data.id,
-                content: formatMessagePreview(row.reply_to_data.content, row.reply_to_data.messageType),
+                content: formatMessagePreview(row.reply_to_data.content, row.reply_to_data.messageType ?? null),
                 senderName: row.reply_to_data.senderName,
               }
             } else if (row.reply_to_message_id) {
@@ -564,9 +485,9 @@ export function useRealtimeChat({ conversationId, userId, username }: UseRealtim
             })
 
             const needsParent = row.reply_to_message_id && !currentMessages.some(m => m.id === row.reply_to_message_id)
-            let resolvedParent: any = null
+            let resolvedParent: { id: string; body: string | null; sender_id: string; message_type: string | null } | null = null
 
-            if (needsParent) {
+            if (needsParent && row.reply_to_message_id) {
               const { data: parentData } = await supabase
                 .from('messages')
                 .select('id, body, sender_id, message_type')
@@ -574,7 +495,7 @@ export function useRealtimeChat({ conversationId, userId, username }: UseRealtim
                 .maybeSingle()
 
               if (parentData) {
-                resolvedParent = parentData
+                resolvedParent = parentData as { id: string; body: string | null; sender_id: string; message_type: string | null }
               }
             }
 
@@ -681,7 +602,7 @@ export function useRealtimeChat({ conversationId, userId, username }: UseRealtim
           table: 'message_reactions',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        async (payload: { eventType: 'INSERT' | 'UPDATE' | 'DELETE', new: Record<string, any>, old: Record<string, any> }) => {
+        async (payload: { eventType: 'INSERT' | 'UPDATE' | 'DELETE', new: MessageReactionRow, old: { id: string } }) => {
           if (payload.eventType === 'INSERT') {
             const newReaction = payload.new as MessageReactionRow
             setMessages((current) =>

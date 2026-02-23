@@ -9,7 +9,7 @@ import {
 import { type FC, useEffect, useMemo, useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '@/hooks/use-realtime-chat'
+import type { ChatMessage } from '@/components/whatsapp/types'
 import { AudioMessagePlayer } from '@/components/audio-message-player'
 import { ContactMessageCard } from '@/components/contact-message-card'
 import { PollMessageCard, type PollPayload } from '@/components/poll-message-card'

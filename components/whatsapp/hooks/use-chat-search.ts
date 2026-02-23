@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ChatMessage } from "@/hooks/use-realtime-chat";
+import type { ChatMessage } from "../types";
 
 export function useChatSearch(messages: ChatMessage[]) {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
